@@ -1,0 +1,20 @@
+<Dance_khg>
+    <PresetList maidNo="1"
+        FileName="pre_喜多見柚_制服.preset"
+        X="0.5"
+        Y="0.0"
+        Z="-0.5"
+    />
+    <PresetList maidNo="2"
+        FileName="pre_綾瀬穂乃香_制服.preset"
+        X="-0.5"
+        Y="0.0"
+        Z="-0.5"
+    />
+    <PresetList maidNo="3"
+        FileName="pre_桃井あずき_制服.preset"
+        X="0.0"
+        Y="0.0"
+        Z="-1.5"
+    />
+</Dance_khg>
