@@ -8,13 +8,13 @@ using UnityInjector;
 using UnityInjector.Attributes;
 using System.Reflection;
 
-namespace CM3D2.dance_cm3d2_006_ssn
+namespace CM3D2.dance_khg
 {
     [PluginFilter("CM3D2x64"),
     PluginFilter("CM3D2x86"),
     PluginFilter("CM3D2VRx64"),
-    PluginName("MaidToMaid"),
-    PluginVersion("0.0.0.1")]
+    PluginName("dance_khg"),
+    PluginVersion("0.0.0.3")]
     public class dance_khg : PluginBase
     {
 
@@ -25,7 +25,9 @@ namespace CM3D2.dance_cm3d2_006_ssn
         private int[] presetPos = new int[MAX_LISTED_MAID];
         private Boolean maidSetting = false;
         private Boolean[] motionSetting = new Boolean[MAX_LISTED_MAID];
+        private Maid maid0;
         private Maid maid;
+        private String lastBlend;
         
         private void SetPreset(Maid maid, string fileName)
         {
@@ -51,6 +53,7 @@ namespace CM3D2.dance_cm3d2_006_ssn
             for(int i = 0; i < MAX_LISTED_MAID; i++){
                 motionSetting[i] = false;
             }
+            lastBlend = null;
         }
 
         private void Update()
@@ -60,7 +63,19 @@ namespace CM3D2.dance_cm3d2_006_ssn
                 xmlManager = new XmlManager();
             }
             if (!Enum.IsDefined(typeof(TargetLevel), level)) return;
-            if(maidSetting == true) return;
+            if(maidSetting == true){
+                maid0 = GameMain.Instance.CharacterMgr.GetMaid(0);
+                if(maid0.ActiveFace != lastBlend){
+                    lastBlend = maid0.ActiveFace;
+                    for(int i = 0; i < MAX_LISTED_MAID; i++){
+                        if(xmlManager.listPreset[i] != null && motionSetting[i] == true){
+                            maid = GameMain.Instance.CharacterMgr.GetMaid(i + 1);
+                            maid.FaceBlend(maid.ActiveFace = lastBlend);
+                        }
+                    }
+                    return;
+                }
+            }
             for(int i = 0; i < MAX_LISTED_MAID; i++){
                 if(xmlManager.listPreset[i] != null){
                    maid = GameMain.Instance.CharacterMgr.GetMaid(i + 1);
@@ -90,7 +105,8 @@ namespace CM3D2.dance_cm3d2_006_ssn
                             int m_MotionLoad = (int)field.GetValue(maid);
 
                             if(m_MotionLoad == 0){
-                                maid.CrossFade("dance_cm3d2_005_khg_f.anm", false, false, false, 0.0f, 1f);
+//                                maid.CrossFade("dance_cm3d2_005_khg_f.anm", false, false, false, 0.0f, xmlManager.weight);
+                                maid.CrossFade("dance_cm3d2_005_khg_f.anm", false, false, false, 0.0f, 1.0f);
                                 maid.body0.m_Bones.GetComponent<Animation>()["dance_cm3d2_005_khg_f.anm"].time = -0.400f;
                                 motionSetting[i] = true;
                             }
@@ -111,6 +127,7 @@ namespace CM3D2.dance_cm3d2_006_ssn
             public string[] listPreset = new string[MAX_LISTED_MAID];
             public Vector3[] listPos = new Vector3[MAX_LISTED_MAID];
             public float fov;
+//            public float weight;
             
             public XmlManager()
             {
@@ -141,6 +158,7 @@ namespace CM3D2.dance_cm3d2_006_ssn
                 }
                 presetList = xmldoc.GetElementsByTagName("Camera");
                 fov =float.Parse(((XmlElement)presetList[0]).GetAttribute("fieldOfView"));
+//                weight =float.Parse(((XmlElement)presetList[0]).GetAttribute("weight"));
             }
         }
 
