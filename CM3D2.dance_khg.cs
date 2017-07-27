@@ -53,15 +53,6 @@ namespace CM3D2.dance_khg
           , "dance_cm3d2_005_khg_f.anm"
         };
 
-        private float[] timingList = new float[]{
-            -0.400f
-          , -0.400f
-          , -0.400f
-          , -0.400f
-          , -0.400f
-          , -0.400f
-        };
-
         private enum TargetLevel
         {
             Scene_f1 = 20
@@ -86,7 +77,6 @@ namespace CM3D2.dance_khg
             xmlManager = new XmlManager();
             for(int i = 0; i < sceneList.Length ;i++){
                 anmHash.Add(sceneList[i],anmList[i]);
-                timingHash.Add(sceneList[i],timingList[i]);
             }
         }
 
