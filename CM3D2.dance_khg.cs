@@ -15,7 +15,7 @@ namespace CM3D2.dance_khg
     PluginFilter("CM3D2x86"),
     PluginFilter("CM3D2VRx64"),
     PluginName("dance_khg"),
-    PluginVersion("0.0.0.5")]
+    PluginVersion("0.0.0.6")]
     public class dance_khg : PluginBase
     {
 
@@ -26,6 +26,7 @@ namespace CM3D2.dance_khg
         private int[] presetPos = new int[MAX_LISTED_MAID];
         private Boolean maidSetting = false;
         private Boolean[] motionSetting = new Boolean[MAX_LISTED_MAID];
+        private Boolean[] maidSync = new Boolean[MAX_LISTED_MAID];
         private Maid maid0;
         private Maid maid;
         private String lastBlend;
@@ -35,13 +36,19 @@ namespace CM3D2.dance_khg
         private Hashtable timingHash = new Hashtable();
         
         private int[] sceneList = new int[]{
-            (int)TargetLevel.Scene_sp2
+            (int)TargetLevel.Scene_f1
+          , (int)TargetLevel.Scene_end
+          , (int)TargetLevel.Scene_smt
+          , (int)TargetLevel.Scene_sp2
           , (int)TargetLevel.Scene_kano
           , (int)TargetLevel.Scene_khg
         };
 
         private string[] anmList = new string[]{
-            "dance_cm3d_003_sp2_f1.anm"
+            "dance_cm3d_001_f1.anm"
+          , "dance_cm3d_002_end_f1.anm"
+          , "dance_cm3d2_002_smt_f.anm"
+          , "dance_cm3d_003_sp2_f1.anm"
           , "dance_cm3d_004_kano_f1.anm"
           , "dance_cm3d2_005_khg_f.anm"
         };
@@ -50,14 +57,22 @@ namespace CM3D2.dance_khg
             -0.400f
           , -0.400f
           , -0.400f
+          , -0.400f
+          , -0.400f
+          , -0.400f
         };
 
         private enum TargetLevel
         {
-            Scene_sp2 = 28
+            Scene_f1 = 20
+          , Scene_end = 22
+          , Scene_smt = 26
+          , Scene_sp2 = 28
           , Scene_kano = 32
           , Scene_khg = 36
         }
+        private DanceMain danceMain = null;
+        private FieldInfo field;
         
         private void SetPreset(Maid maid, string fileName)
         {
@@ -78,12 +93,15 @@ namespace CM3D2.dance_khg
         private void OnLevelWasLoaded(int level)
         {
             this.level = level;
+            if (!Enum.IsDefined(typeof(TargetLevel), level)) return;
             maidSetting = false;
             for(int i = 0; i < MAX_LISTED_MAID; i++){
                 motionSetting[i] = false;
+                maidSync[i] = false;
             }
             lastBlend = null;
             kuchipaku = null;
+            danceMain = (DanceMain)FindObjectOfType(typeof(DanceMain));
         }
 
         private void Update()
@@ -102,6 +120,20 @@ namespace CM3D2.dance_khg
                         maid.FoceKuchipakuUpdate(maid.body0.m_Bones.GetComponent<Animation>()[(string)anmHash[level]].time);
                         if(nowBlend != lastBlend){
                             maid.FaceBlend(maid.ActiveFace = nowBlend);
+                        }
+
+                        if(maidSync[i] == false){
+                            field = (typeof(DanceMain)).GetField("m_eMode", BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+                            int m_eMode = (int)field.GetValue(danceMain);
+                            if(maid.IsBusy == false && m_eMode == 3){
+                                
+                                field = (typeof(DanceMain)).GetField("m_fOffsetTime", BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+                                float m_fOffsetTime = (float)field.GetValue(danceMain);
+                                maid.body0.m_Bones.GetComponent<Animation>()[(string)anmHash[level]].time = m_fOffsetTime;
+                                maid.StartKuchipakuPattern(m_fOffsetTime,kuchipaku,true);
+                                maidSync[i] = true;
+
+                            }
                         }
                     }
                 }
@@ -145,8 +177,8 @@ namespace CM3D2.dance_khg
 //                                maid.EyeToReset(0.0f);
                                   maid.EyeToCamera(Maid.EyeMoveType.目だけ向ける,0.0f);
                                 maid.CrossFade((string)anmHash[level], false, false, false, 0.0f, 1.0f);
-                                maid.body0.m_Bones.GetComponent<Animation>()[(string)anmHash[level]].time = (float)timingHash[level];
-                                maid.StartKuchipakuPattern((float)timingHash[level],kuchipaku,true);
+//                                maid.body0.m_Bones.GetComponent<Animation>()[(string)anmHash[level]].time = (float)timingHash[level];
+//                                maid.StartKuchipakuPattern((float)timingHash[level],kuchipaku,true);
                                 motionSetting[i] = true;
                             }
                         }
