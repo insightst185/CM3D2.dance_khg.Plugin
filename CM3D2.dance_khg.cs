@@ -15,7 +15,7 @@ namespace CM3D2.dance_khg
     PluginFilter("CM3D2x86"),
     PluginFilter("CM3D2VRx64"),
     PluginName("dance_khg"),
-    PluginVersion("0.0.0.6")]
+    PluginVersion("0.0.0.7")]
     public class dance_khg : PluginBase
     {
 
@@ -27,6 +27,8 @@ namespace CM3D2.dance_khg
         private Boolean maidSetting = false;
         private Boolean[] motionSetting = new Boolean[MAX_LISTED_MAID];
         private Boolean[] maidSync = new Boolean[MAX_LISTED_MAID];
+        private Boolean[] maidPaku = new Boolean[MAX_LISTED_MAID];
+        private Boolean rSync;
         private Maid maid0;
         private Maid maid;
         private String lastBlend;
@@ -64,6 +66,7 @@ namespace CM3D2.dance_khg
         }
         private DanceMain danceMain = null;
         private FieldInfo field;
+        private FieldInfo fieldMaid = (typeof(Maid)).GetField("m_Param", BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
         
         private void SetPreset(Maid maid, string fileName)
         {
@@ -82,17 +85,32 @@ namespace CM3D2.dance_khg
 
         private void OnLevelWasLoaded(int level)
         {
+// 実験コード
+//            Debug.LogError("Dance_khg.Plugin:[GetStockMaidCount]:" + GameMain.Instance.CharacterMgr.GetStockMaidCount());
+//            if(GameMain.Instance.CharacterMgr.GetStockMaidCount() > 1){
+//                List<Maid> StockMaidList = GameMain.Instance.CharacterMgr.GetStockMaidList();
+//                foreach(Maid maidn in StockMaidList){
+//                    MaidParam m_Param = (MaidParam)fieldMaid.GetValue(maidn);
+//                    Debug.LogError("Dance_khg.Plugin:[Name]:" + m_Param.status.last_name + " " + m_Param.status.first_name);
+//                }
+//            }
+
             this.level = level;
             if (!Enum.IsDefined(typeof(TargetLevel), level)) return;
             maidSetting = false;
             for(int i = 0; i < MAX_LISTED_MAID; i++){
                 motionSetting[i] = false;
                 maidSync[i] = false;
+                maidPaku[i] = false;
             }
             lastBlend = null;
             kuchipaku = null;
             danceMain = (DanceMain)FindObjectOfType(typeof(DanceMain));
+            
+//            denum = false;
         }
+
+//        Boolean denum;
 
         private void Update()
         {
@@ -101,8 +119,31 @@ namespace CM3D2.dance_khg
                 xmlManager = new XmlManager();
             }
             if (!Enum.IsDefined(typeof(TargetLevel), level)) return;
+
+// 実験コード
+//            Debug.LogError("Dance_khg.Plugin:[GetBGName]:" + GameMain.Instance.BgMgr.GetBGName());
+//            if(!denum){
+//                for (int index = 0; index < danceMain.m_listEventObject.Count; ++index){
+//                    Debug.LogError("Dance_khg.Plugin:[GetBGName]:" + danceMain.m_listEventObject[index].name);
+//                }
+//                danceMain.SwitchObject("Prame",false);
+//                danceMain.SwitchObject("FloorTile",false);
+//                field = (typeof(DanceMain)).GetField("m_htEventObj", BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+//                Hashtable m_htEventObj = (Hashtable)field.GetValue(danceMain);
+//                m_htEventObj.Remove("Prame");
+//                m_htEventObj.Remove("FloorTile");
+//                denum = true;
+//            }
+
             if(maidSetting == true){
                 maid0 = GameMain.Instance.CharacterMgr.GetMaid(0);
+                // 着替えたりしてずれたら再同期 誰かひとりでもbusyになるとみんなずれるっぽいのでひとりでもbusyになったら再同期
+                if(maid0.IsBusy){
+                   rSync = true;
+                }
+                else{
+                   rSync = false;
+                }
                 nowBlend = maid0.ActiveFace;
                 for(int i = 0; i < MAX_LISTED_MAID; i++){
                     if(xmlManager.listPreset[i] != null && motionSetting[i] == true){
@@ -115,16 +156,29 @@ namespace CM3D2.dance_khg
                         if(maidSync[i] == false){
                             field = (typeof(DanceMain)).GetField("m_eMode", BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
                             int m_eMode = (int)field.GetValue(danceMain);
-                            if(maid.IsBusy == false && m_eMode == 3){
+//                            if(maid.IsBusy == false && m_eMode == 3){
+                            if(m_eMode == 3){
                                 
-                                field = (typeof(DanceMain)).GetField("m_fOffsetTime", BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-                                float m_fOffsetTime = (float)field.GetValue(danceMain);
-                                maid.body0.m_Bones.GetComponent<Animation>()[(string)anmHash[level]].time = m_fOffsetTime;
-                                maid.StartKuchipakuPattern(m_fOffsetTime,kuchipaku,true);
+//                                field = (typeof(DanceMain)).GetField("m_fOffsetTime", BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+//                                float m_fOffsetTime = (float)field.GetValue(danceMain);
+//                                maid.body0.m_Bones.GetComponent<Animation>()[(string)anmHash[level]].time = m_fOffsetTime;
+//                                maid.StartKuchipakuPattern(m_fOffsetTime,kuchipaku,true);
+                                maid.body0.m_Bones.GetComponent<Animation>()[(string)anmHash[level]].time = NTime.time;
+                                if(maidPaku[i] == false){
+                                    maid.StartKuchipakuPattern(NTime.time,kuchipaku,true);
+                                    maidPaku[i] = true;
+                                }
                                 maidSync[i] = true;
 
                             }
                         }
+                        // 着替えたりしてずれたら再同期 誰かひとりでもbusyになるとみんなずれるっぽいのでひとりでもbusyになったら再同期
+                        if(maidSync[i] == true && maid.IsBusy == true) rSync = true;
+                    }
+                }
+                if(rSync == true){
+                    for(int i = 0; i < MAX_LISTED_MAID; i++){
+                        maidSync[i] = false;
                     }
                 }
                 lastBlend = nowBlend;
@@ -134,16 +188,44 @@ namespace CM3D2.dance_khg
                 if(xmlManager.listPreset[i] != null){
                    maid = GameMain.Instance.CharacterMgr.GetMaid(i + 1);
                    if(maid == null){
-                       maid = GameMain.Instance.CharacterMgr.AddStockMaid();
+                       String extent = Path.GetExtension(xmlManager.listPreset[i]);
+                       if(extent.Equals(".preset")){
+                       // ここダンスをするたびにmaidさん増えちゃう 適当な名前つけて
+                       // ２回目以降は名前で検索したほうがよさげ
+                           maid = searchStockMaid("plugin",(i + 1).ToString());
+                           if (maid == null){
+                               maid = GameMain.Instance.CharacterMgr.AddStockMaid();
+                               MaidParam m_Param = (MaidParam)fieldMaid.GetValue(maid);
+                               m_Param.SetName("plugin",(i + 1).ToString());
+                           }
+                           SetPreset(maid,xmlManager.listPreset[i]);
+                       }
+                       else{
+                           string[] nameList = xmlManager.listPreset[i].Split(' ');
+                           maid = searchStockMaid(nameList[0], nameList[1]);
+                           if(maid == null) continue;
+                       }
                        GameMain.Instance.CharacterMgr.SetActiveMaid(maid,i + 1);
                    }
-                   SetPreset(maid,xmlManager.listPreset[i]);
                    maid.SetPos(xmlManager.listPos[i]);
                    maid.Visible = true;
                 }
             }
             maidSetting = true;
         }
+
+        private Maid searchStockMaid(string lastName, string firstName){
+            List<Maid> StockMaidList = GameMain.Instance.CharacterMgr.GetStockMaidList();
+            foreach(Maid maidn in StockMaidList){
+                MaidParam m_Param = (MaidParam)fieldMaid.GetValue(maidn);
+                if(lastName.Equals(m_Param.status.last_name) &&
+                   firstName.Equals(m_Param.status.first_name)){
+                    return maidn;
+                }
+            }
+            return null;
+        }
+
         
         private void LateUpdate(){
 
