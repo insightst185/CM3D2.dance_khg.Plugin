@@ -15,7 +15,7 @@ namespace CM3D2.dance_khg
     PluginFilter("CM3D2x86"),
     PluginFilter("CM3D2VRx64"),
     PluginName("dance_khg"),
-    PluginVersion("0.0.0.7")]
+    PluginVersion("0.0.0.8")]
     public class dance_khg : PluginBase
     {
 
@@ -85,15 +85,6 @@ namespace CM3D2.dance_khg
 
         private void OnLevelWasLoaded(int level)
         {
-// 実験コード
-//            Debug.LogError("Dance_khg.Plugin:[GetStockMaidCount]:" + GameMain.Instance.CharacterMgr.GetStockMaidCount());
-//            if(GameMain.Instance.CharacterMgr.GetStockMaidCount() > 1){
-//                List<Maid> StockMaidList = GameMain.Instance.CharacterMgr.GetStockMaidList();
-//                foreach(Maid maidn in StockMaidList){
-//                    MaidParam m_Param = (MaidParam)fieldMaid.GetValue(maidn);
-//                    Debug.LogError("Dance_khg.Plugin:[Name]:" + m_Param.status.last_name + " " + m_Param.status.first_name);
-//                }
-//            }
 
             this.level = level;
             if (!Enum.IsDefined(typeof(TargetLevel), level)) return;
@@ -106,11 +97,7 @@ namespace CM3D2.dance_khg
             lastBlend = null;
             kuchipaku = null;
             danceMain = (DanceMain)FindObjectOfType(typeof(DanceMain));
-            
-//            denum = false;
         }
-
-//        Boolean denum;
 
         private void Update()
         {
@@ -119,21 +106,6 @@ namespace CM3D2.dance_khg
                 xmlManager = new XmlManager();
             }
             if (!Enum.IsDefined(typeof(TargetLevel), level)) return;
-
-// 実験コード
-//            Debug.LogError("Dance_khg.Plugin:[GetBGName]:" + GameMain.Instance.BgMgr.GetBGName());
-//            if(!denum){
-//                for (int index = 0; index < danceMain.m_listEventObject.Count; ++index){
-//                    Debug.LogError("Dance_khg.Plugin:[GetBGName]:" + danceMain.m_listEventObject[index].name);
-//                }
-//                danceMain.SwitchObject("Prame",false);
-//                danceMain.SwitchObject("FloorTile",false);
-//                field = (typeof(DanceMain)).GetField("m_htEventObj", BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-//                Hashtable m_htEventObj = (Hashtable)field.GetValue(danceMain);
-//                m_htEventObj.Remove("Prame");
-//                m_htEventObj.Remove("FloorTile");
-//                denum = true;
-//            }
 
             if(maidSetting == true){
                 maid0 = GameMain.Instance.CharacterMgr.GetMaid(0);
@@ -156,13 +128,8 @@ namespace CM3D2.dance_khg
                         if(maidSync[i] == false){
                             field = (typeof(DanceMain)).GetField("m_eMode", BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
                             int m_eMode = (int)field.GetValue(danceMain);
-//                            if(maid.IsBusy == false && m_eMode == 3){
                             if(m_eMode == 3){
                                 
-//                                field = (typeof(DanceMain)).GetField("m_fOffsetTime", BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-//                                float m_fOffsetTime = (float)field.GetValue(danceMain);
-//                                maid.body0.m_Bones.GetComponent<Animation>()[(string)anmHash[level]].time = m_fOffsetTime;
-//                                maid.StartKuchipakuPattern(m_fOffsetTime,kuchipaku,true);
                                 maid.body0.m_Bones.GetComponent<Animation>()[(string)anmHash[level]].time = NTime.time;
                                 if(maidPaku[i] == false){
                                     maid.StartKuchipakuPattern(NTime.time,kuchipaku,true);
@@ -208,6 +175,7 @@ namespace CM3D2.dance_khg
                        GameMain.Instance.CharacterMgr.SetActiveMaid(maid,i + 1);
                    }
                    maid.SetPos(xmlManager.listPos[i]);
+                   maid.body0.VertexMorph_FromProcItem("munel",1.0f);
                    maid.Visible = true;
                 }
             }
@@ -245,12 +213,8 @@ namespace CM3D2.dance_khg
                                     maid0 = GameMain.Instance.CharacterMgr.GetMaid(0);
                                     kuchipaku = System.Convert.ToBase64String(maid0.m_baKuchipakuPattern);
                                 }
-//                                maid.CrossFade((string)anmHash[level], false, false, false, 0.0f, xmlManager.weight);
-//                                maid.EyeToReset(0.0f);
                                   maid.EyeToCamera(Maid.EyeMoveType.目だけ向ける,0.0f);
                                 maid.CrossFade((string)anmHash[level], false, false, false, 0.0f, 1.0f);
-//                                maid.body0.m_Bones.GetComponent<Animation>()[(string)anmHash[level]].time = (float)timingHash[level];
-//                                maid.StartKuchipakuPattern((float)timingHash[level],kuchipaku,true);
                                 motionSetting[i] = true;
                             }
                         }
@@ -270,7 +234,6 @@ namespace CM3D2.dance_khg
             public string[] listPreset = new string[MAX_LISTED_MAID];
             public Vector3[] listPos = new Vector3[MAX_LISTED_MAID];
             public float fov;
-//            public float weight;
             
             public XmlManager()
             {
@@ -301,7 +264,6 @@ namespace CM3D2.dance_khg
                 }
                 presetList = xmldoc.GetElementsByTagName("Camera");
                 fov =float.Parse(((XmlElement)presetList[0]).GetAttribute("fieldOfView"));
-//                weight =float.Parse(((XmlElement)presetList[0]).GetAttribute("weight"));
             }
         }
 
