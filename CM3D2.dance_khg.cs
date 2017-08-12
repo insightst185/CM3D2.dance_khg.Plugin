@@ -102,7 +102,7 @@ namespace CM3D2.dance_khg
         private void Update()
         {
 
-            if(Input.GetKey(KeyCode.Escape)){
+            if(Input.GetKeyDown(KeyCode.Escape)){
                 xmlManager = new XmlManager();
             }
             if (!Enum.IsDefined(typeof(TargetLevel), level)) return;
